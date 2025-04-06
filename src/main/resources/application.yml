@@ -1,0 +1,6 @@
+spring:
+  application:
+    name: spring-boot-with-chatgpt
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY}
