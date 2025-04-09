@@ -3,11 +3,17 @@ package br.com.eric.controller;
 import br.com.eric.service.ChatService;
 import br.com.eric.service.ImageService;
 import br.com.eric.service.RecipeService;
+import br.com.eric.service.TranscriptionService;
 import org.springframework.ai.image.ImageResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -16,12 +22,15 @@ public class GenerativeAIController {
     private final ChatService chatService;
     private final RecipeService recipeService;
     private final ImageService imageService;
+    private final TranscriptionService transcriptionService;
 
     public GenerativeAIController(ChatService chatService, RecipeService recipeService,
-                                  ImageService imageService) {
+                                  ImageService imageService,
+                                  TranscriptionService transcriptionService) {
         this.chatService = chatService;
         this.recipeService = recipeService;
         this.imageService = imageService;
+        this.transcriptionService = transcriptionService;
     }
 
     @GetMapping("ask-ai")
@@ -55,5 +64,16 @@ public class GenerativeAIController {
                 .map(result -> result.getOutput().getUrl())
                 .toList();
         return imageUrls;
+    }
+
+    @PostMapping("transcribe")
+    public ResponseEntity<String> transcribeAudio(@RequestParam("file") MultipartFile file){
+        try {
+            String transcription = transcriptionService.transcribeAudio(file);
+            return ResponseEntity.ok(transcription);
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing the audio file: " + e.getMessage());
+        }
     }
 }
